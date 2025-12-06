@@ -9,6 +9,7 @@ export const UserProvider = ({ children }) => {
 	const [currentUser, setCurrentUser] = useState(null); // Wallet Address
 	const [userProfile, setUserProfile] = useState(null); // Firebase Data (Name, Email, etc.)
 	const [isLoading, setIsLoading] = useState(true);
+	const [walletSigner, setWalletSigner] = useState(null);
 
 	// Helper: Fetch or Create User Profile in Firestore
 	const fetchUserProfile = async (address) => {
@@ -29,6 +30,10 @@ export const UserProvider = ({ children }) => {
 					const accounts = await window.ethereum.request({ method: 'eth_accounts' });
 					if (accounts.length > 0) {
 						setCurrentUser(accounts[0]);
+
+						const provider = new ethers.BrowserProvider(window.ethereum);
+						const signer = await provider.getSigner();
+						setWalletSigner(signer);
 					}
 				} catch (error) {
 					console.error('Error checking wallet:', error);
@@ -75,7 +80,7 @@ export const UserProvider = ({ children }) => {
 		setUserProfile(null); // Clear Firebase data
 	};
 
-	return <UserContext.Provider value={{ currentUser, userProfile, isLoading, connectWallet, disconnectWallet }}>{children}</UserContext.Provider>;
+	return <UserContext.Provider value={{ currentUser, userProfile, walletSigner, isLoading, connectWallet, disconnectWallet }}>{children}</UserContext.Provider>;
 };
 
 export const useUser = () => useContext(UserContext);

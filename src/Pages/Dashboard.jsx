@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
 	AreaChart,
 	Area,
@@ -80,8 +81,11 @@ const Dashboard = () => {
 		<div className="min-h-screen bg-base-100 p-6 font-sans">
 			<div className="max-w-7xl mx-auto">
 				{/* Header */}
-				<header className="mb-8">
+				<header className="mb-8 flex justify-between items-center">
 					<h1 className="text-3xl font-bold ">Environmental Analytics</h1>
+					<Link to="/send-data">
+						<button className="btn btn-primary">Upload Data</button>
+					</Link>
 				</header>
 
 				{/* --- ROW 1: Summary Cards --- */}

@@ -29,8 +29,8 @@ const Home = () => {
 					color: 'white',
 					textShadow: '1px 1px 4px rgba(0,0,0,0.5)',
 				}}>
-				Welcome to Transparency World <br />
-				Via Blockchain Making the Better World
+				Welcome to DePIN World <br />
+				Via Blockchain Show the Real World
 			</h1>
 
 			<>

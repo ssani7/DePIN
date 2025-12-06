@@ -4,7 +4,7 @@ import { auth, logout, provider } from '../../firebase';
 import { Link } from 'react-router-dom';
 
 const Navbar = () => {
-	const { currentUser, userProfile, isLoading, disconnectWallet } = useUser();
+	const { currentUser, userProfile, isLoading, connectWallet, disconnectWallet } = useUser();
 
 	const loginGoogle = async () => {
 		try {
@@ -24,6 +24,17 @@ const Navbar = () => {
 				</Link>
 			</div>
 			<div className="flex-none">
+				<div className="dropdown dropdown-end mr-2">
+					{!currentUser ? (
+						<button onClick={connectWallet} disabled={isLoading} className="btn btn-sm btn-outline btn-primary">
+							{isLoading ? <span className="loading loading-spinner"></span> : 'Connect Wallet'}
+						</button>
+					) : (
+						<div className="badge badge-sm badge-accent p-4 font-mono badge-outline">
+							{currentUser.substring(0, 6)}...{currentUser.substring(38)}
+						</div>
+					)}
+				</div>
 				<div className="dropdown dropdown-end">
 					{userProfile ? (
 						<>
