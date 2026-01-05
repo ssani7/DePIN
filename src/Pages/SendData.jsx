@@ -164,8 +164,8 @@ function SendData() {
 		try {
 			// 2. Prepare the JSON Payload
 			const payload = {
-				temp: temp,
-				hum: hum,
+				temperature: temp,
+				humidity: hum,
 				timestamp: Date.now(),
 				source: 'ESP32_React_App',
 			};
