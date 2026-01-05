@@ -2,6 +2,7 @@
 import { onAuthStateChanged } from 'firebase/auth';
 import { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '../firebase';
+import { ethers } from 'ethers';
 
 const UserContext = createContext();
 
@@ -31,8 +32,11 @@ export const UserProvider = ({ children }) => {
 					if (accounts.length > 0) {
 						setCurrentUser(accounts[0]);
 
-						const provider = new ethers.BrowserProvider(window.ethereum);
-						const signer = await provider.getSigner();
+						// const provider = new ethers.BrowserProvider(window.ethereum);
+						const provider = new ethers.providers.Web3Provider(window.ethereum);
+						console.log(accounts);
+						// const signer = await provider.getSigner();
+						const signer = provider.getSigner();
 						setWalletSigner(signer);
 					}
 				} catch (error) {

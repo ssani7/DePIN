@@ -15,12 +15,14 @@ function SendData() {
 	const [hum, setHum] = useState('');
 
 	const { currentUser, walletSigner } = useUser(); // Removed unused variables for cleaner code
+	console.log(walletSigner);
 
 	// UI State
 	const [status, setStatus] = useState('');
 	const [statusType, setStatusType] = useState('info');
 	const [isLoading, setIsLoading] = useState(false);
 	const [ipfsCid, setIpfsCid] = useState('');
+	const [txHash, setTxHash] = useState('');
 
 	// Recent Pins State
 	const [recentPins, setRecentPins] = useState([]);
@@ -125,25 +127,78 @@ function SendData() {
 	};
 
 	// --- 4. SEND TO BLOCKCHAIN ---
+	// const sendToBlockchain = async () => {
+	// 	if (!walletSigner) return showStatus('Connect Wallet First', 'warning');
+
+	// 	setIsLoading(true);
+	// 	showStatus('Please sign transaction in MetaMask...', 'info');
+
+	// 	try {
+	// 		const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, walletSigner);
+	// 		const tempInt = Math.round(parseFloat(temp) * 100);
+	// 		const humInt = Math.round(parseFloat(hum) * 100);
+
+	// 		const tx = await contract.storeData(tempInt, humInt);
+	// 		showStatus('Tx Sent! Waiting for block...', 'info');
+
+	// 		await tx.wait();
+	// 		showStatus('Confirmed on Blockchain! ✅', 'success');
+	// 	} catch (error) {
+	// 		console.error(error);
+	// 		showStatus('Transaction Failed: ' + error.message, 'error');
+	// 	} finally {
+	// 		setIsLoading(false);
+	// 	}
+	// };
+	// --- 4. SEND JSON TO TESTNET (NO SMART CONTRACT) ---
+	console.log(currentUser);
 	const sendToBlockchain = async () => {
+		// 1. Basic Checks
 		if (!walletSigner) return showStatus('Connect Wallet First', 'warning');
+		if (!temp || !hum) return showStatus('No sensor data to send', 'warning');
 
 		setIsLoading(true);
-		showStatus('Please sign transaction in MetaMask...', 'info');
+		showStatus('Preparing transaction...', 'info');
+		setTxHash('');
 
 		try {
-			const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, walletSigner);
-			const tempInt = Math.round(parseFloat(temp) * 100);
-			const humInt = Math.round(parseFloat(hum) * 100);
+			// 2. Prepare the JSON Payload
+			const payload = {
+				temp: temp,
+				hum: hum,
+				timestamp: Date.now(),
+				source: 'ESP32_React_App',
+			};
+			const jsonString = JSON.stringify(payload);
 
-			const tx = await contract.storeData(tempInt, humInt);
-			showStatus('Tx Sent! Waiting for block...', 'info');
+			// 3. Encode to Hex (Ethers v5 Syntax)
+			// We convert the string to bytes, then bytes to hex
+			const hexData = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(jsonString));
 
+			// 4. Send Transaction
+			// We send it to 'currentUser' (yourself) so you don't lose assets, just pay gas.
+			const tx = await walletSigner.sendTransaction({
+				to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+				value: 0, // Sending 0 ETH
+				data: hexData, // <--- Your JSON data goes here
+			});
+
+			setTxHash(tx.hash);
+			showStatus('Tx Sent! Waiting for confirmation...', 'info');
+			console.log('Transaction Hash:', tx.hash);
+
+			// 5. Wait for Block Confirmation
 			await tx.wait();
-			showStatus('Confirmed on Blockchain! ✅', 'success');
+
+			showStatus('JSON Data stored on Testnet! ✅', 'success');
 		} catch (error) {
-			console.error(error);
-			showStatus('Transaction Failed: ' + error.message, 'error');
+			console.error('Blockchain Error:', error);
+			// Handle "User rejected" specifically for better UX
+			if (error.code === 4001 || error.code === 'ACTION_REJECTED') {
+				showStatus('Transaction rejected by user', 'error');
+			} else {
+				showStatus('Transaction Failed: ' + error.message, 'error');
+			}
 		} finally {
 			setIsLoading(false);
 		}
@@ -208,6 +263,18 @@ function SendData() {
 							<button onClick={sendToBlockchain} disabled={isLoading || !walletSigner} className="btn btn-primary w-full">
 								Write to Blockchain
 							</button>
+							{txHash && (
+								<div className="alert alert-info shadow-sm mt-2 p-2 text-xs">
+									<div>
+										<span className="font-bold">Tx Hash:</span>
+										<br />
+										<span className="break-all">{txHash}</span>
+									</div>
+									<a href={`https://sepolia.etherscan.io/tx/${txHash}`} target="_blank" rel="noreferrer" className="btn btn-xs btn-ghost border-white text-white mt-1 whitespace-nowrap">
+										View on Etherscan
+									</a>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>
